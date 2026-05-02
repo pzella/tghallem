@@ -127,7 +127,7 @@ The design is organized into eight sections, each surfaced as a row in the desig
 - **S2 · Invite friends** — referral hero ("you both get 7 days Pro"), invite code, share targets, friends list with joined/streak/pending states
 
 ### 9. Account & Privacy
-- **Privacy** — granular toggles (personalization, analytics, leaderboards, reminders, marketing) + download/delete data
+- **Privacy** — granular toggles (personalization, analytics, leaderboards, reminders, marketing); account deletion (no bulk “export my data” flow in product scope)
 - **Sign-out confirmation** — bottom-sheet with reassurance copy
 
 ---

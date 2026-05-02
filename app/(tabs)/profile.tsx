@@ -54,12 +54,17 @@ export default function ProfileScreen() {
 
         {/* settings items */}
         {[
-          { label: 'Account settings', icon: '⚙️' },
-          { label: 'Notifications', icon: '🔔' },
-          { label: 'Privacy', icon: '🔒' },
-          { label: 'Help & support', icon: '❓' },
+          { label: 'Account settings', icon: '⚙️', href: undefined as string | undefined },
+          { label: 'Notifications', icon: '🔔', href: undefined },
+          { label: 'Privacy', icon: '🔒', href: '/privacy' },
+          { label: 'Help & support', icon: '❓', href: undefined },
         ].map((item) => (
-          <Pressable key={item.label} style={styles.menuItem}>
+          <Pressable
+            key={item.label}
+            style={styles.menuItem}
+            onPress={() => item.href && router.push(item.href)}
+            disabled={!item.href}
+          >
             <Text style={styles.menuIcon}>{item.icon}</Text>
             <Text style={styles.menuLabel}>{item.label}</Text>
             <Text style={styles.menuChevron}>›</Text>

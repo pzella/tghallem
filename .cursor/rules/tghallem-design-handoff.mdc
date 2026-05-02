@@ -12,3 +12,5 @@ When implementing UI, navigation, copy, beginner/intermediate/advanced tracks, o
 - **`docs/design-handoff/screens*.jsx`** — Screen-level layout/copy/behavior specs (port to React Native / Expo; do not paste web JSX verbatim).
 
 Implementation targets **Expo Router** under `app/`, shared UI under `src/components/`, tokens under `src/constants/tokens.ts`. Prefer pixel-near fidelity to the handoff per README **Fidelity** section.
+
+Engineering scope and trade-offs (tracks, Supabase-only lessons, AI vendor, no data export, etc.) live in **`docs/PRODUCT_DECISIONS.md`** — follow that when it conflicts with exploratory copy in older prototypes.

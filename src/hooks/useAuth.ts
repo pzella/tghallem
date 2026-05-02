@@ -57,6 +57,36 @@ export async function signOut(): Promise<void> {
   if (error) Alert.alert('Sign out error', error.message);
 }
 
+/** Deletes the signed-in user via GoTrue `DELETE /auth/v1/user` (requires valid session). */
+export async function deleteCurrentUserAccount(): Promise<{ error: string | null }> {
+  const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+  const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+  const { data: sessionData } = await supabase.auth.getSession();
+  const session = sessionData.session;
+  if (!session?.access_token) {
+    return { error: 'You must be signed in to delete your account.' };
+  }
+  try {
+    const res = await fetch(`${url.replace(/\/$/, '')}/auth/v1/user`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: anon,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      return { error: body || `Request failed (${res.status})` };
+    }
+    await supabase.auth.signOut();
+    return { error: null };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Something went wrong.';
+    return { error: msg };
+  }
+}
+
 export async function sendPasswordReset(email: string): Promise<{ error: AuthError | null }> {
   const { error } = await supabase.auth.resetPasswordForEmail(email);
   return { error };

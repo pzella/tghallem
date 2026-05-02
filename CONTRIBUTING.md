@@ -31,7 +31,6 @@ app/                     # Expo Router screens
 src/
   constants/
     tokens.ts            # Design tokens (colors, spacing, radii, shadows)
-    lessonData.ts        # Seed lesson content (replace with API)
   components/
     ui/                  # Button, Card, Input, ProgressBar
     layout/              # ScreenBase, AppHeader
@@ -78,6 +77,6 @@ All colors, spacing, radii, and shadows live in [`src/constants/tokens.ts`](src/
 3. Use `Colors`, `FontSizes`, `Spacing`, `Radii` from tokens.
 4. Add any new navigation links in the relevant `_layout.tsx`.
 
-## Adding lesson content
+## Lesson content
 
-Edit `src/constants/lessonData.ts` to add `Flashcard[]` and `QuizQuestion[]` arrays to any lesson. Long-term, move this to a CMS or Supabase table and fetch it in the lesson screen.
+Lessons, flashcards, and quiz rows live in **Supabase** (`lessons`, `flashcards`, `quiz_questions`, `quiz_options`). The app loads them via `src/hooks/useLessons.ts`. Manage content in the Supabase dashboard or migrations — see `docs/PRODUCT_DECISIONS.md`.
