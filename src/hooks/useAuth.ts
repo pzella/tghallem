@@ -76,8 +76,15 @@ export async function deleteCurrentUserAccount(): Promise<{ error: string | null
       },
     });
     if (!res.ok) {
-      const body = await res.text();
-      return { error: body || `Request failed (${res.status})` };
+      // Do not surface raw API bodies to the user (may leak implementation details).
+      if (__DEV__) {
+        const body = await res.text();
+        console.warn('[deleteCurrentUserAccount]', res.status, body);
+      }
+      return {
+        error:
+          'Could not delete your account right now. Please try again later or contact support.',
+      };
     }
     await supabase.auth.signOut();
     return { error: null };

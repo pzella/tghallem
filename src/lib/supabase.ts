@@ -5,6 +5,12 @@ import { Platform } from 'react-native';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
+if (__DEV__ && (!supabaseUrl || !supabaseAnonKey)) {
+  console.warn(
+    '[Supabase] Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY (see .env.example). Builds without them cannot authenticate securely.'
+  );
+}
+
 const storage =
   Platform.OS === 'web'
     ? {
