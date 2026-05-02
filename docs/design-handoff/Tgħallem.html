@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Tgħallem — Maltese learning app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    /* Maltese red — bold, with a muted tint for backgrounds */
+    --red-h: 24;
+    --red-c: 0.21;
+    --red: oklch(0.545 var(--red-c) var(--red-h));
+    --red-tint: oklch(0.95 0.04 var(--red-h));
+
+    /* Warm cream backgrounds */
+    --cream: #FFF8F0;
+    --cream-2: #F4ECE0;
+    --sand: #EBD9C0;
+    --ochre: #C8924A;
+    --ochre-tint: #FBEFD9;
+    --terracotta: #C26A4A;
+    --sage: #DDE8DA;
+    --sage-deep: #6E8C72;
+
+    /* Ink */
+    --ink: #2A1F1A;
+    --ink-2: #7A6A60;
+    --ink-3: #B8AA9E;
+  }
+  html, body { margin: 0; padding: 0; background: #EFE7DB; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+<script type="text/babel" src="screens-flow.jsx"></script>
+<script type="text/babel" src="screens-advanced.jsx"></script>
+<script type="text/babel" src="screens-social.jsx"></script>
+<script type="text/babel" src="screens-translate.jsx"></script>
+<script type="text/babel" src="screens-topics.jsx"></script>
+
+<script type="text/babel">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "redHue": 24,
+  "redChroma": 0.21,
+  "redLightness": 0.545
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  // Re-paint red token on tweak change
+  React.useEffect(() => {
+    const r = document.documentElement;
+    r.style.setProperty('--red-h', tweaks.redHue);
+    r.style.setProperty('--red-c', tweaks.redChroma);
+    r.style.setProperty('--red', `oklch(${tweaks.redLightness} ${tweaks.redChroma} ${tweaks.redHue})`);
+    r.style.setProperty('--red-tint', `oklch(0.95 ${Math.min(0.05, tweaks.redChroma * 0.25)} ${tweaks.redHue})`);
+  }, [tweaks.redHue, tweaks.redChroma, tweaks.redLightness]);
+
+  const W = 390, H = 844;
+  const ab = (id, label, Comp) => (
+    <DCArtboard id={id} label={label} width={W} height={H}>
+      <Comp/>
+    </DCArtboard>
+  );
+
+  return (
+    <>
+      <DesignCanvas title="Tgħallem" subtitle="Maltese learning app · mobile screens · React Native ready">
+        <DCSection id="flow" title="Onboarding Flow" subtitle="Map of the full sign-up journey">
+          <DCArtboard id="flowmap" label="✪ Flow diagram" width={1180} height={680}>
+            <FlowDiagram/>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="onboarding-flow" title="Onboarding & Sign-up" subtitle="Welcome → auth → level → goal">
+          {ab('onboarding', '01 · Welcome', OnboardingScreen)}
+          {ab('onboarding2', '02 · Carousel slide', OnboardingSlide2)}
+          {ab('authgate', '03 · Auth gate', AuthGateScreen)}
+          {ab('signup', '04a · Sign up', SignUpScreen)}
+          {ab('signin', '04b · Sign in', SignInScreen)}
+          {ab('level', '05 · Level select', LevelScreen)}
+          {ab('goal', '06 · Daily goal', GoalScreen)}
+        </DCSection>
+
+        <DCSection id="main" title="Main App" subtitle="Daily anchor after onboarding">
+          {ab('home', '07 · Home / Dashboard', HomeScreen)}
+        </DCSection>
+
+        <DCSection id="learn" title="Learning Flow" subtitle="From lesson list → flashcard → quiz">
+          {ab('lessons', '08 · Lesson List', LessonListScreen)}
+          {ab('flashcard', '09 · Flashcard', FlashcardScreen)}
+          {ab('quiz', '10 · Quiz', QuizScreen)}
+        </DCSection>
+
+        <DCSection id="advanced" title="Intermediate & Advanced" subtitle="Reading, writing, grammar, sentence building, composition">
+          {ab('tracks', 'A1 · Track select', TrackSelectScreen)}
+          {ab('grammar', 'A2 · Grammar lesson', GrammarScreen)}
+          {ab('reading', 'A3 · Reading', ReadingScreen)}
+          {ab('sentence', 'A4 · Sentence builder', SentenceBuilderScreen)}
+          {ab('writing', 'A5 · Writing practice', WritingScreen)}
+          {ab('composition', 'A6 · Composition', CompositionScreen)}
+        </DCSection>
+
+        <DCSection id="progression" title="Level Progression" subtitle="How learners move from Beginner → Intermediate → Advanced">
+          {ab('progress', 'P1 · Readiness dashboard', LevelProgressionScreen)}
+          {ab('placement', 'P2 · Placement test', PlacementTestScreen)}
+          {ab('rankup', 'P3 · Rank-up celebration', RankUpScreen)}
+        </DCSection>
+
+        <DCSection id="social" title="Sharing & Virality" subtitle="Shareable badges, referrals, and friend mechanics">
+          {ab('share', 'S1 · Share badge sheet', ShareBadgeScreen)}
+          {ab('invite', 'S2 · Invite friends', InviteFriendsScreen)}
+        </DCSection>
+
+        <DCSection id="translate" title="Translation (Advanced)" subtitle="English → Maltese composition with live grading">
+          {ab('thub', 'T1 · Translation hub', TranslationHubScreen)}
+          {ab('tcompose', 'T2 · Compose translation', TranslationComposeScreen)}
+          {ab('tfeedback', 'T3 · Graded feedback', TranslationFeedbackScreen)}
+          {ab('tparallel', 'T4 · Parallel reader', ParallelTranslationScreen)}
+        </DCSection>
+
+        <DCSection id="topics" title="Specialised Topics & Progress" subtitle="Topic packs and feature differences across Intermediate and Advanced">
+          {ab('inttopics', 'X1 · Intermediate topics', IntermediateTopicsScreen)}
+          {ab('advtopics', 'X2 · Advanced topics', AdvancedTopicsScreen)}
+          {ab('progstats', 'X3 · Progress & stats', ProgressStatsScreen)}
+        </DCSection>
+
+        <DCSection id="explore" title="Topics & Progress" subtitle="Browse vocab themes, track streaks, manage profile">
+          {ab('categories', '11 · Categories', CategoriesScreen)}
+          {ab('progress', '12 · Progress & Badges', ProgressScreen)}
+          {ab('profile', '13 · Profile / Settings', ProfileScreen)}
+        </DCSection>
+
+        <DCSection id="account" title="Account & Privacy" subtitle="Settings, data controls, sign-out">
+          {ab('privacy', '14 · Privacy', PrivacyScreen)}
+          {ab('signout', '15 · Sign-out confirm', SignOutScreen)}
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Red intensity" subtitle="Maltese flag is #CF142B — push warmer or cooler.">
+          <TweakSlider label="Hue" min={0} max={50} step={1} value={tweaks.redHue} onChange={(v) => setTweak('redHue', v)} suffix="°"/>
+          <TweakSlider label="Chroma (saturation)" min={0.05} max={0.28} step={0.01} value={tweaks.redChroma} onChange={(v) => setTweak('redChroma', v)}/>
+          <TweakSlider label="Lightness" min={0.40} max={0.70} step={0.01} value={tweaks.redLightness} onChange={(v) => setTweak('redLightness', v)}/>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button onClick={() => setTweak({ redHue: 24, redChroma: 0.21, redLightness: 0.545 })} style={{ flex: 1, height: 32, borderRadius: 8, border: '1px solid rgba(0,0,0,0.1)', background: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Maltese flag</button>
+            <button onClick={() => setTweak({ redHue: 32, redChroma: 0.13, redLightness: 0.58 })} style={{ flex: 1, height: 32, borderRadius: 8, border: '1px solid rgba(0,0,0,0.1)', background: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Terracotta</button>
+            <button onClick={() => setTweak({ redHue: 18, redChroma: 0.11, redLightness: 0.62 })} style={{ flex: 1, height: 32, borderRadius: 8, border: '1px solid rgba(0,0,0,0.1)', background: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Soft coral</button>
+          </div>
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

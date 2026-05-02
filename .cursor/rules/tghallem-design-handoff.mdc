@@ -1,0 +1,14 @@
+---
+description: Product and UI source of truth — Tgħallem design handoff (tokens, flows, screens)
+alwaysApply: true
+---
+
+# Tgħallem design context
+
+When implementing UI, navigation, copy, beginner/intermediate/advanced tracks, onboarding, or new features, treat **`docs/design-handoff/`** as the authoritative reference.
+
+- **`docs/design-handoff/README.md`** — Overview, design tokens (colors, type, spacing), information architecture (all sections), interactions, Maltese orthography (Ċ Ġ Ħ Ż Għ Ie), suggested build order, open questions.
+- **`docs/design-handoff/Tgħallem.html`** — Open in a browser for the full interactive prototype canvas (HTML + Babel JSX references).
+- **`docs/design-handoff/screens*.jsx`** — Screen-level layout/copy/behavior specs (port to React Native / Expo; do not paste web JSX verbatim).
+
+Implementation targets **Expo Router** under `app/`, shared UI under `src/components/`, tokens under `src/constants/tokens.ts`. Prefer pixel-near fidelity to the handoff per README **Fidelity** section.
