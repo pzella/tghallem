@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProgressBar } from '@/components/ui/ProgressBar';
-import { useProgressionStore } from '@/stores/useProgressionStore';
+import { useSession } from '@/hooks/useAuth';
+import { useUserStats } from '@/hooks/useProgression';
 import { Colors, FontSizes, Spacing, Radii } from '@/constants/tokens';
 
 const SKILLS = [
@@ -13,7 +14,12 @@ const SKILLS = [
 ];
 
 export default function ProgressScreen() {
-  const { xp, streakDays, masteredWordIds } = useProgressionStore();
+  const { session } = useSession();
+  const { stats } = useUserStats(session?.user?.id);
+
+  const xp = stats?.total_xp ?? 0;
+  const streakDays = stats?.current_streak ?? 0;
+  const masteredWords = stats?.mastered_words ?? 0;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -26,7 +32,7 @@ export default function ProgressScreen() {
         {/* stat row */}
         <View style={styles.statRow}>
           {[
-            { label: 'Words', value: masteredWordIds.length },
+            { label: 'Words', value: masteredWords },
             { label: 'Streak', value: `${streakDays}d` },
             { label: 'XP', value: xp },
           ].map((s) => (

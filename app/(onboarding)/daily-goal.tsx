@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Falko } from '@/components/Falko';
+import { supabase } from '@/lib/supabase';
+import { saveOnboardingSettings } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Colors, FontSizes, Spacing, Radii } from '@/constants/tokens';
 
@@ -16,12 +18,19 @@ const GOALS = [
 
 export default function DailyGoalScreen() {
   const router = useRouter();
-  const { setDailyGoal, completeOnboarding } = useAuthStore();
+  const level = useAuthStore((s) => s.level);
+  const completeLocal = useAuthStore((s) => s.completeOnboarding);
   const [selected, setSelected] = useState(10);
+  const [loading, setLoading] = useState(false);
 
-  const handleStart = () => {
-    setDailyGoal(selected);
-    completeOnboarding();
+  const handleStart = async () => {
+    setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await saveOnboardingSettings(session.user.id, level, selected);
+    }
+    completeLocal();
+    setLoading(false);
     router.replace('/(tabs)');
   };
 
@@ -67,10 +76,11 @@ export default function DailyGoalScreen() {
 
       <View style={styles.ctaWrap}>
         <Pressable
-          style={({ pressed }) => [styles.cta, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.cta, loading && { opacity: 0.6 }, pressed && !loading && styles.pressed]}
           onPress={handleStart}
+          disabled={loading}
         >
-          <Text style={styles.ctaLabel}>Start learning →</Text>
+          <Text style={styles.ctaLabel}>{loading ? 'Setting up…' : 'Start learning →'}</Text>
         </Pressable>
       </View>
     </SafeAreaView>

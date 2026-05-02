@@ -10,25 +10,33 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Falko } from '@/components/Falko';
 import { ProgressBar } from '@/components/ui/ProgressBar';
-import { useAuthStore } from '@/stores/useAuthStore';
-import { useProgressionStore } from '@/stores/useProgressionStore';
+import { useSession } from '@/hooks/useAuth';
+import { useBeginnerLessons } from '@/hooks/useLessons';
+import { useUserStats } from '@/hooks/useProgression';
 import { Colors, FontSizes, Spacing, Radii } from '@/constants/tokens';
-
-const CONTINUE_CARDS = [
-  { id: 'alphabet', emoji: 'A', title: 'The Alphabet', sub: 'Lesson 4 · Letters Ġ Ħ Ż', pct: 0.8, bg: Colors.sage },
-  { id: 'numbers', emoji: '5', title: 'Numbers 1–20', sub: 'Lesson 2 · Counting up', pct: 0.45, bg: Colors.cream2 },
-];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const dailyGoal = useAuthStore((s) => s.dailyGoalMinutes);
-  const streakDays = useProgressionStore((s) => s.streakDays);
-  const xp = useProgressionStore((s) => s.xp);
+  const { session } = useSession();
+  const userId = session?.user?.id;
+  const { stats } = useUserStats(userId);
+  const { lessons } = useBeginnerLessons(userId);
 
-  const firstName = user?.name?.split(' ')[0] ?? 'there';
-  const dailyProgress = 3; // TODO: derive from progression store
-  const dailyTotal = Math.round(dailyGoal / 3);
+  const streakDays = stats?.current_streak ?? 0;
+  const xp = stats?.total_xp ?? 0;
+
+  const completedCount = lessons.filter((l) => l.progress?.state === 'complete').length;
+  const continueCards = [...lessons.filter((l) => l.progress && l.progress.state !== 'complete'), ...lessons.filter((l) => !l.progress)]
+    .slice(0, 2)
+    .map((l) => ({
+      id: l.slug,
+      title: l.title_en,
+      sub: l.subtitle_en ?? '',
+      pct: l.progress ? 0.5 : 0,
+    }));
+
+  const dailyProgress = completedCount;
+  const dailyTotal = Math.max(1, lessons.length);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -40,7 +48,7 @@ export default function HomeScreen() {
         {/* greeting row */}
         <View style={styles.greetRow}>
           <View>
-            <Text style={styles.greetSub}>Bonġu, {firstName} 👋</Text>
+            <Text style={styles.greetSub}>Bonġu 👋</Text>
             <Text style={styles.greetTitle}>Let's learn today</Text>
           </View>
           <View style={styles.streakPill}>
@@ -80,14 +88,14 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.continueList}>
-          {CONTINUE_CARDS.map((c) => (
+          {continueCards.map((c) => (
             <Pressable
               key={c.id}
               style={styles.continueCard}
               onPress={() => router.push(`/lesson/${c.id}`)}
             >
-              <View style={[styles.continueIcon, { backgroundColor: c.bg }]}>
-                <Text style={styles.continueIconText}>{c.emoji}</Text>
+              <View style={[styles.continueIcon, { backgroundColor: Colors.cream2 }]}>
+                <Text style={styles.continueIconText}>📖</Text>
               </View>
               <View style={styles.continueText}>
                 <Text style={styles.continueTitle}>{c.title}</Text>

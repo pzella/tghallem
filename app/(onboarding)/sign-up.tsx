@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Input } from '@/components/ui/Input';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { signUpWithEmail } from '@/hooks/useAuth';
 import { Colors, FontSizes, Spacing, Radii } from '@/constants/tokens';
 
 function validate(email: string, password: string) {
@@ -24,14 +24,14 @@ function validate(email: string, password: string) {
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [terms, setTerms] = useState(false);
   const [marketing, setMarketing] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; submit?: string }>({});
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const passwordChecks = [
     { label: 'At least 8 characters', ok: password.length >= 8 },
@@ -40,14 +40,23 @@ export default function SignUpScreen() {
 
   const canSubmit = terms && email.length > 0 && password.length >= 8;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setSubmitted(true);
     const errs = validate(email, password);
     setErrors(errs);
-    if (Object.keys(errs).length === 0 && terms) {
-      setUser({ id: 'local', email, name: email.split('@')[0] });
-      router.push('/(onboarding)/level-select');
+    if (Object.keys(errs).length > 0 || !terms) return;
+
+    setLoading(true);
+    setErrors((e) => ({ ...e, submit: undefined }));
+    const { error } = await signUpWithEmail(email, password);
+    setLoading(false);
+
+    if (error) {
+      setErrors({ submit: error.message });
+      return;
     }
+
+    router.push('/(onboarding)/level-select');
   };
 
   return (
@@ -117,19 +126,23 @@ export default function SignUpScreen() {
             </View>
             <Text style={styles.checkboxLabel}>Send me weekly Maltese tips and culture stories.</Text>
           </Pressable>
+
+          {errors.submit ? (
+            <Text style={styles.submitError}>{errors.submit}</Text>
+          ) : null}
         </ScrollView>
 
         <View style={styles.ctaWrap}>
           <Pressable
             style={({ pressed }) => [
               styles.cta,
-              !canSubmit && styles.ctaDisabled,
-              pressed && canSubmit && styles.pressed,
+              (!canSubmit || loading) && styles.ctaDisabled,
+              pressed && canSubmit && !loading && styles.pressed,
             ]}
             onPress={handleSubmit}
-            disabled={!canSubmit}
+            disabled={!canSubmit || loading}
           >
-            <Text style={styles.ctaLabel}>Continue →</Text>
+            <Text style={styles.ctaLabel}>{loading ? 'Creating account…' : 'Continue →'}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -167,6 +180,7 @@ const styles = StyleSheet.create({
   checkmark: { color: Colors.white, fontSize: 13, fontWeight: '700' },
   checkboxLabel: { flex: 1, fontSize: FontSizes.small, color: Colors.ink2, lineHeight: 20 },
   link: { color: Colors.red, fontWeight: '600' },
+  submitError: { marginTop: 16, fontSize: FontSizes.small, color: Colors.red },
   ctaWrap: {
     paddingHorizontal: Spacing.screenH2,
     paddingBottom: 40,

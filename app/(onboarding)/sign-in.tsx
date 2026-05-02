@@ -11,24 +11,30 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Input } from '@/components/ui/Input';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { signInWithEmail } from '@/hooks/useAuth';
 import { Colors, FontSizes, Spacing, Radii } from '@/constants/tokens';
 
 export default function SignInScreen() {
   const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     if (!email || !password) {
       setError('Please enter your email and password.');
       return;
     }
-    // TODO: replace with real auth call
-    setUser({ id: 'local', email, name: email.split('@')[0] });
+    setLoading(true);
+    setError('');
+    const { error: authError } = await signInWithEmail(email, password);
+    setLoading(false);
+    if (authError) {
+      setError(authError.message);
+      return;
+    }
     router.replace('/(tabs)');
   };
 
@@ -48,14 +54,21 @@ export default function SignInScreen() {
               label="Email"
               placeholder="you@example.com"
               value={email}
-              onChangeText={(t) => { setEmail(t); setError(''); }}
+              onChangeText={(t) => {
+                setEmail(t);
+                setError('');
+              }}
               keyboardType="email-address"
+              autoCapitalize="none"
             />
             <Input
               label="Password"
               placeholder="Your password"
               value={password}
-              onChangeText={(t) => { setPassword(t); setError(''); }}
+              onChangeText={(t) => {
+                setPassword(t);
+                setError('');
+              }}
               secureTextEntry
             />
           </View>
@@ -69,10 +82,11 @@ export default function SignInScreen() {
 
         <View style={styles.ctaWrap}>
           <Pressable
-            style={({ pressed }) => [styles.cta, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.cta, loading && styles.ctaDisabled, pressed && !loading && styles.pressed]}
             onPress={handleSignIn}
+            disabled={loading}
           >
-            <Text style={styles.ctaLabel}>Sign in →</Text>
+            <Text style={styles.ctaLabel}>{loading ? 'Signing in…' : 'Sign in →'}</Text>
           </Pressable>
 
           <View style={styles.signupRow}>
@@ -114,6 +128,7 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     elevation: 8,
   },
+  ctaDisabled: { opacity: 0.75 },
   ctaLabel: { fontSize: FontSizes.body, fontWeight: '700', color: Colors.white },
   pressed: { opacity: 0.88, transform: [{ scale: 0.98 }] },
   signupRow: { flexDirection: 'row', justifyContent: 'center' },

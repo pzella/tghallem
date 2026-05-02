@@ -1,14 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import type { Session } from '@supabase/supabase-js';
 import { Falko } from '@/components/Falko';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { signOut as supabaseSignOut } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
 import { Colors, FontSizes, Spacing, Radii } from '@/constants/tokens';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, signOut } = useAuthStore();
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
+      setEmail(data.session?.user?.email ?? null);
+    });
+  }, []);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -19,8 +27,8 @@ export default function ProfileScreen() {
         {
           text: 'Sign out',
           style: 'destructive',
-          onPress: () => {
-            signOut();
+          onPress: async () => {
+            await supabaseSignOut();
             router.replace('/(onboarding)/welcome');
           },
         },
@@ -39,8 +47,8 @@ export default function ProfileScreen() {
             <Falko size={72} mood="happy" />
           </View>
           <View>
-            <Text style={styles.name}>{user?.name ?? 'Learner'}</Text>
-            <Text style={styles.email}>{user?.email ?? ''}</Text>
+            <Text style={styles.name}>Learner</Text>
+            <Text style={styles.email}>{email ?? ''}</Text>
           </View>
         </View>
 
