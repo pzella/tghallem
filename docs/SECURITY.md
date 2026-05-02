@@ -2,6 +2,46 @@
 
 Mobile apps are **untrusted clients**. Anything shipped in the binary or loaded as `EXPO_PUBLIC_*` can be extracted. **Defense in depth** means Row Level Security (RLS), server-side secrets, and minimal sensitive data on-device.
 
+---
+
+## TLS / HTTPS (“SSL”) — what applies to this app
+
+| Question | Answer |
+|----------|--------|
+| **Are API calls encrypted?** | **Yes.** The Supabase URL must use **`https://`**. The HTTP stack (React Native / Expo) negotiates **TLS** with Supabase’s servers; traffic is not sent in cleartext over the internet in normal operation. |
+| **Do we “integrate SSL” in code?** | **No separate SDK step** — using `https` endpoints **is** TLS. You verify production builds point at your real `*.supabase.co` HTTPS URL (via `EXPO_PUBLIC_SUPABASE_URL`). |
+| **Certificate pinning** | **Optional hardening**, not default: you pin Supabase’s leaf/intermediate certs so the app only trusts those chains (helps vs malicious proxies / rare MITM on hostile networks). Adds **rotation pain** when certs change; often skipped unless threat model requires it. Typical RN approaches need native modules or maintained pinning libs — weigh cost vs RLS + MFA + OS trust store. |
+
+---
+
+## Two-factor authentication (2FA / MFA)
+
+| Question | Answer |
+|----------|--------|
+| **Is it possible?** | **Yes**, with **Supabase Auth MFA** (typically **TOTP** — Google Authenticator, Authy, etc.). Enable MFA in the **Supabase Dashboard** for your project, then implement client flows. |
+| **What the app must do** | After email/password sign-in, if the server signals MFA is required: run **challenge → verify TOTP** using `supabase.auth.mfa.*` (see [Supabase MFA guide](https://supabase.com/docs/guides/auth/auth-mfa)). Optional: **enroll** MFA from Profile once logged in (QR / secret). |
+| **What stays server-controlled** | Which users must use MFA (policy), factor enrollment, and assurance levels — **configured in Supabase**, not only in the client. |
+| **SMS 2FA** | Different product path (phone provider, cost, abuse). TOTP is the usual starting point for apps like this. |
+
+*Implementation in Tgħallem is a product milestone:* settings UI + login branching when `aal` / MFA challenge is returned — not yet wired unless we add that feature explicitly.
+
+---
+
+## Reducing what’s “public” or exposed
+
+“Everything closed unless needed” applies differently per layer:
+
+| Layer | What’s inherently visible | How you lock it down |
+|-------|---------------------------|----------------------|
+| **Mobile binary** | `EXPO_PUBLIC_*` (URL + anon key) | **Cannot hide** the anon key from a determined analyst — treat as **public**. **RLS** must enforce all data access; never ship **service role** keys. |
+| **Supabase project** | REST / Auth / Realtime endpoints | **Disable unused auth providers** (Apple/Google until ready). Tighten **redirect URLs**. Turn off **Realtime** or restrict channels if unused. Use **Edge Functions** with `verify_jwt` for sensitive logic later (e.g. Anthropic). |
+| **Database** | Same anon key for every install | **RLS policies** per table; **no broad `USING true`** on sensitive tables. |
+| **Future APIs** | New domains | **HTTPS only**, auth required, minimal scopes. |
+
+**Summary:** You **cannot** make the anon client “private”; you **make the data private** with RLS + MFA + server-side secrets for anything that must stay secret (LLM keys, admin ops).
+
+---
+
 ## Secrets & configuration
 
 | Topic | Guidance |
